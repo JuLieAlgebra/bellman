@@ -1,5 +1,6 @@
 /*
-Class for solving the finite stochastic Bellman equation via fixed-point iteration.
+Class for solving the finite-space, deterministic-reward,
+stochastic Bellman equation via fixed-point iteration.
 */
 
 ////////////////////////////////////////////////// DEPENDENCIES
@@ -7,8 +8,11 @@ Class for solving the finite stochastic Bellman equation via fixed-point iterati
 #include <vector>
 #include <cmath>
 #include <limits>
+#include <fstream>
 
 ////////////////////////////////////////////////// ALIASES
+
+namespace bellman {
 
 using Index = uint;
 using Real = double;
@@ -21,11 +25,16 @@ Real constexpr INF = std::numeric_limits<Real>::infinity();
 ////////////////////////////////////////////////// MAIN
 
 class Bellman {
-    uint const nS;
-    uint const nA;
-    Real const discount;
-    Vector<Real> value;
-    Vector<Index> policy;
+    uint const nS; // cardinality of the state space
+    uint const nA; // cardinality of the action space
+    Real const discount; // factor to discount future reward, on [0,1]
+    Vector<Real> value; // current optimal value function estimate
+    Vector<Index> policy; // current optimal policy estimate
+    Vector<Index> S; // convenience vector storing the state space indexes
+
+    // (Optional) Returns a vector of states that have nonzero probability of being
+    // transitioned to given state s and action a
+    virtual Vector<Index>& valid_transitions(Index s, Index a) {return S;}
 
 public:
     Bellman(uint nS, uint nA, Real discount) :
@@ -33,13 +42,35 @@ public:
         nA(nA),
         discount(discount),
         value(nS),
-        policy(nS) {
+        policy(nS),
+        S(nS) {
+        for(Index s=0; s<nS; ++s) {S[s] = s;}
     }
 
-    virtual Real dynamic(Index s, Index a, Index s1) =0;
-    virtual Real reward(Index s, Index a) =0;
+    // Returns the probability of transitioning to state s1 given state s and action a
+    virtual Real dynamic(Index s, Index a, Index s1) const =0;
+    // Returns the reward for selecting action a in state s
+    virtual Real reward(Index s, Index a) const =0;
 
-    void solve(uint iterations) {
+    // Access methods
+    Real get_value_at(Index s) const {return value.at(s);}
+    Index get_action_at(Index s) const {return policy.at(s);}
+    Vector<Real> get_value() const {return value;}
+    Vector<Index> get_policy() const {return policy;}
+
+    // Write optimal actions and values to the given file
+    void record(std::string const& file) const {
+        std::ofstream stream;
+        stream.open(file);
+        stream << "s, a, v" << std::endl;
+        for(Index s=0; s<nS; ++s) {
+            stream << s << ", " << policy[s] << ", " << value[s] << std::endl;
+        }
+        stream.close();
+    }
+
+    // Improves the current value function and policy estimate by the given number of fixed-point iterations
+    void improve(uint iterations) {
         for(uint i=0; i<iterations; ++i) {
             // Iterate over starting states
             for(Index s=0; s<nS; ++s) {
@@ -51,7 +82,7 @@ public:
                     // Prepare to compute expected next value
                     Real expectation = 0.0;
                     // Iterate over ending states
-                    for(Index s1=0; s1<nS; ++s1) {
+                    for(Index s1 : valid_transitions(s, a)) {
                         // Accrue expectation integral
                         expectation += dynamic(s, a, s1) * value[s1];
                     }
@@ -69,3 +100,7 @@ public:
         }
     }
 };
+
+//////////////////////////////////////////////////
+
+} // namespace bellman
