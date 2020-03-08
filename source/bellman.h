@@ -30,11 +30,6 @@ class Bellman {
     Real const discount; // factor to discount future reward, on [0,1]
     Vector<Real> value; // current optimal value function estimate
     Vector<Index> policy; // current optimal policy estimate
-    Vector<Index> S; // convenience vector storing the state space indexes
-
-    // (Optional) Returns a vector of states that have nonzero probability of being
-    // transitioned to given state s and action a
-    virtual Vector<Index>& valid_transitions(Index s, Index a) {return S;}
 
 public:
     Bellman(uint nS, uint nA, Real discount) :
@@ -42,9 +37,7 @@ public:
         nA(nA),
         discount(discount),
         value(nS),
-        policy(nS),
-        S(nS) {
-        for(Index s=0; s<nS; ++s) {S[s] = s;}
+        policy(nS) {
     }
 
     // Returns the probability of transitioning to state s1 given state s and action a
@@ -82,7 +75,7 @@ public:
                     // Prepare to compute expected next value
                     Real expectation = 0.0;
                     // Iterate over ending states
-                    for(Index s1 : valid_transitions(s, a)) {
+                    for(Index s1=0; s1<nS; ++s1) {
                         // Accrue expectation integral
                         expectation += dynamic(s, a, s1) * value[s1];
                     }
