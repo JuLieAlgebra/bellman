@@ -1,33 +1,41 @@
 /*
-Class for solving the finite-space, deterministic-reward,
-stochastic Bellman equation via fixed-point iteration.
+Abstract-base-class for solving the finite-space, deterministic-reward,
+time-invariant, stochastic Bellman equation via fixed-point iteration.
 */
 
 ////////////////////////////////////////////////// DEPENDENCIES
 
+// Standard math
 #include <vector>
 #include <cmath>
 #include <limits>
+
+// Standard interfacing
+#include <iostream>
 #include <fstream>
 
 ////////////////////////////////////////////////// ALIASES
 
 namespace bellman {
 
-using Index = uint;
-using Real = double;
+using Index = uint; // discrete representation for the state and action spaces
+using Real = double; // ordinary real numbers
 
 template <class T>
-using Vector = std::vector<T>;
+using Vector = std::vector<T>; // just an abbreviation
 
-Real constexpr INF = std::numeric_limits<Real>::infinity();
+Real constexpr INF = std::numeric_limits<Real>::infinity(); // floating-point infinity
 
-////////////////////////////////////////////////// MAIN
+////////////////////////////////////////////////// CORE
 
+// Abstract-base-class that various Markov decision processes can inherit from to
+// get solved by the value-iteration algorithm. Derived classes need to implement
+// the dynamic and reward methods as shown.
 class Bellman {
+protected:
     uint const nS; // cardinality of the state space
     uint const nA; // cardinality of the action space
-    Real const discount; // factor to discount future reward, on [0,1]
+    Real const discount; // factor to discount future reward, between 0.0 and 1.0
     Vector<Real> value; // current optimal value function estimate
     Vector<Index> policy; // current optimal policy estimate
 
@@ -42,7 +50,7 @@ public:
 
     // Returns the probability of transitioning to state s1 given state s and action a
     virtual Real dynamic(Index s, Index a, Index s1) const =0;
-    // Returns the reward for selecting action a in state s
+    // Returns the (deterministic) reward for selecting action a in state s
     virtual Real reward(Index s, Index a) const =0;
 
     // Access methods
@@ -51,15 +59,31 @@ public:
     Vector<Real> get_value() const {return value;}
     Vector<Index> get_policy() const {return policy;}
 
-    // Write optimal actions and values to the given file
-    void record(std::string const& file) const {
+    // Write the current solution to the given file or terminal
+    void record_solution(std::string const& file) const {
+        // Open and clear file
         std::ofstream stream;
         stream.open(file);
+        // Write header string as first line
         stream << "s, a, v" << std::endl;
         for(Index s=0; s<nS; ++s) {
+            // Write comma-delimited state-action-value tuples
             stream << s << ", " << policy[s] << ", " << value[s] << std::endl;
         }
+        // Close file
         stream.close();
+    }
+    void print_solution() const {
+        // Print header
+        std::cout << "================" << std::endl;
+        std::cout << "Bellman Solution" << std::endl;
+        std::cout << "s | a | v" << std::endl;
+        std::cout << "----------------" << std::endl;
+        for(Index s=0; s<nS; ++s) {
+            // Print pipe-delimited state-action-value tuples
+            std::cout << s << " | " << policy[s] << " | " << value[s] << std::endl;
+        }
+        std::cout << "================" << std::endl;
     }
 
     // Improves the current value function and policy estimate by the given number of fixed-point iterations
