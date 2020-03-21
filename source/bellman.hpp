@@ -86,9 +86,19 @@ public:
         std::cout << "================" << std::endl;
     }
 
-    // Improves the current value function and policy estimate by the given number of fixed-point iterations
-    void improve(uint iterations) {
-        for(uint i=0; i<iterations; ++i) {
+    // Improves the current value function and policy estimate by the given number of
+    // fixed-point iterations or until the given convergence tolerance is met
+    void improve(uint iterations, Real tolerance) {
+        bool converged;
+        std::cout << "================" << std::endl;
+        std::cout << "Bellman improvement beginning..." << std::endl;
+        for(uint i=1; i<=iterations; ++i) {
+            // Alert user of progress
+            if(fmod(100.0*i/iterations, 20.0) == 0.0) {
+                std::cout << "(" << i << " / " << iterations << ")" << std::endl;
+            }
+            // Assume converged unless any values prove to still be changing
+            converged = true;
             // Iterate over starting states
             for(Index s=0; s<nS; ++s) {
                 // Prepare to maximize over actions
@@ -110,11 +120,22 @@ public:
                         best_action = a;
                     }
                 }
+                // Check convergence of this state's value
+                converged = converged and (fabs(value[s] - best_value) < tolerance);
                 // Fixed-point iterate on value for this starting state
                 value[s] = best_value;
                 policy[s] = best_action;
             }
+            // If value converged for all states, finish early
+            if(converged) {
+                std::cout << "... Converged at iteration " << i << " of " << iterations << "." << std::endl;
+                break;
+            }
         }
+        if(not converged) {
+            std::cout << "... Finished at max iteration " << iterations << "." << std::endl;
+        }
+        std::cout << "================" << std::endl;
     }
 };
 

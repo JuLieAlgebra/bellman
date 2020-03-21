@@ -43,7 +43,7 @@ public:
 // Solves the Wendy Hunt problem and displays the results
 int main(/*int argc, char** argv*/) {
     WendyHunt mdp;
-    mdp.improve(2000); // should be enough iterations... TODO: validate convergence
+    mdp.improve(2000, 1e-4);
     mdp.print_solution();
     return 0;
 }
