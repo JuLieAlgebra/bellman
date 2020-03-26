@@ -137,6 +137,26 @@ public:
         }
         std::cout << "================" << std::endl;
     }
+
+    // Helper for converting multidimensional coordinates to a linear vector index
+    Index index_from_coords(std::vector<uint> const& coords, std::vector<uint> const& dims) const {
+        Index index = 0;
+        uint const n = std::min(coords.size(), dims.size());
+        for(uint i=0; i<n; ++i) {
+            index = coords[i] + dims[i]*index;
+        }
+        return index;
+    }
+
+    // Helper for converting a linear vector index into multidimensional coordinates
+    std::vector<uint> coords_from_index(Index index, std::vector<uint> const& dims) const {
+        std::vector<uint> coords(dims.size());
+        for(int i=dims.size()-1; i>=0; --i) {
+            coords[i] = index % dims[i];
+            index /= dims[i];
+        }
+        return coords;
+    }
 };
 
 //////////////////////////////////////////////////

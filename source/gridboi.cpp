@@ -10,12 +10,11 @@ using namespace bellman;
 ////////////////////////////////////////////////// CORE
 
 class GridBoi : public Bellman {
-public:
     // Grid dimensions
     uint const nX;
     uint const nY;
 
-    // State description
+    // State space
     struct State {
         struct Coord {
             uint x;
@@ -31,44 +30,34 @@ public:
         Coord gob;
         Coord goo;
     };
+    std::vector<State> state_space;
 
-    // Action description
+    // Action space
     enum Action {WAIT, UP, DOWN, LEFT, RIGHT};
 
-    // Setup the Grid-Boi problem
-    GridBoi() :
-        //            nS    nA   g
-        Bellman(pow(5*5, 3), 5, 0.9),
-        nX(5),
-        nY(5) {
-    }
-
-    // Computes the state space linear index corresponding to the given structured state description
-    Index index_from_state(State const& state) const {
-        return state.boi.x + nX*(
-                   state.boi.y + nY*(
-                       state.gob.x + nX*(
-                           state.gob.y + nY*(
-                               state.goo.x + nX*(
-                                   state.goo.y)))));
-    }
-
-    // Computes the structured state description corresponding to the given state space linear index
-    State state_from_index(Index index) const {
-        State s; Index p = index;
-        s.boi.x = p % nX; p /= nX;
-        s.boi.y = p % nY; p /= nY;
-        s.gob.x = p % nX; p /= nX;
-        s.gob.y = p % nY; p /= nY;
-        s.goo.x = p % nX; p /= nX;
-        s.goo.y = p % nY; p /= nY;
-        return s;
+public:
+    GridBoi(uint nX=5, uint nY=5) :
+        //            nS      nA   g
+        Bellman(pow(nX*nY, 3), 5, 0.9),
+        nX(nX),
+        nY(nY),
+        state_space(nS) {
+        // Enumerate state space
+        for(uint i=0; i<nS; ++i) {
+            std::vector<uint> const coords = coords_from_index(i, {nX, nY, nX, nY, nX, nY});
+            state_space[i].boi.x = coords[0];
+            state_space[i].boi.y = coords[1];
+            state_space[i].gob.x = coords[2];
+            state_space[i].gob.y = coords[3];
+            state_space[i].goo.x = coords[4];
+            state_space[i].goo.y = coords[5];
+        }
     }
 
     // Returns the probability of transitioning to state s1 given state s and action a
     Real dynamic(Index s_index, Index a, Index s1_index) const {
-        State const s = state_from_index(s_index);
-        State const s1 = state_from_index(s1_index);
+        State const s = state_space[s_index];
+        State const s1 = state_space[s1_index];
         // Evaluate validity of boi move
         if(a == Action::WAIT) {
             // Stand still
@@ -101,12 +90,12 @@ public:
 
     // Returns the (deterministic) reward for selecting action a in state s
     Real reward(Index s_index, Index a) const {
-        State const s = state_from_index(s_index);
+        State const s = state_space[s_index];
         // Get the goo!
-        if(s.boi == s.goo) return 1;
+        if(s.boi == s.goo) return 1.0;
         // Avoid the gob!
-        if(s.boi == s.gob) return -1;
-        return 0;
+        if(s.boi == s.gob) return -1.0;
+        return 0.0;
     }
 };
 
