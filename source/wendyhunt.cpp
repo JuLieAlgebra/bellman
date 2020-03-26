@@ -10,23 +10,23 @@ using namespace bellman;
 ////////////////////////////////////////////////// CORE
 
 class WendyHunt : public Bellman {
-    Vector<Vector<Vector<Real>>> T; // transition matrix
-    Vector<Vector<Real>> R; // reward matrix
+    Vector<Vector<Vector<Real>>> const T; // transition matrix
+    Vector<Vector<Real>> const R; // reward matrix
 
 public:
     WendyHunt() :
         //      nS nA   g
-        Bellman(3, 2, 0.99) {
+        Bellman(3, 2, 0.99),
         // Assign transition matrix values
-        T = {{{  1,   0,   0},
-              {  1,   0,   0},
-              {  0, 0.3, 0.7}},
-             {{0.4,   0, 0.6},
-              {0.1, 0.6, 0.3},
-              {  0, 0.1, 0.9}}};
+        T({{{  1,   0,   0},
+            {  1,   0,   0},
+            {  0, 0.3, 0.7}},
+           {{0.4,   0, 0.6},
+            {0.1, 0.6, 0.3},
+            {  0, 0.1, 0.9}}}),
         // Assign reward matrix values
-        R = {{1, 1, 3},
-             {0, 0, 2}};
+        R({{1, 1, 3},
+           {0, 0, 2}}) {
     }
 
     Real dynamic(Index s, Index a, Index s1) const {
