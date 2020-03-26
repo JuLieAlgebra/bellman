@@ -30,7 +30,7 @@ class GridBoi : public Bellman {
         Coord gob;
         Coord goo;
     };
-    std::vector<State> state_space;
+    Vector<State> state_space;
 
     // Action space
     enum Action {WAIT, UP, DOWN, LEFT, RIGHT};
@@ -44,7 +44,7 @@ public:
         state_space(nS) {
         // Enumerate state space
         for(uint i=0; i<nS; ++i) {
-            std::vector<uint> const coords = coords_from_index(i, {nX, nY, nX, nY, nX, nY});
+            Vector<uint> const coords = coords_from_index(i, {nX, nY, nX, nY, nX, nY});
             state_space[i].boi.x = coords[0];
             state_space[i].boi.y = coords[1];
             state_space[i].gob.x = coords[2];

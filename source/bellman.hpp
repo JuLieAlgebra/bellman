@@ -38,6 +38,7 @@ protected:
     Real const discount; // factor to discount future reward, between 0.0 and 1.0
     Vector<Real> value; // current optimal value function estimate
     Vector<Index> policy; // current optimal policy estimate
+    Vector<Vector<Vector<std::pair<Index, Real>>>> transitions; // optional sparse transition matrix SxAxS'
 
 public:
     Bellman(uint nS, uint nA, Real discount) :
@@ -108,10 +109,17 @@ public:
                 for(Index a=0; a<nA; ++a) {
                     // Prepare to compute expected next value
                     Real expectation = 0.0;
-                    // Iterate over ending states
-                    for(Index s1=0; s1<nS; ++s1) {
-                        // Accrue expectation integral
-                        expectation += dynamic(s, a, s1) * value[s1];
+                    // Iterate over ending states to accrue expectation integral
+                    if(transitions.size()) {
+                        // Leverage sparsity to sum only possible transitions
+                        for(std::pair<Index, Real> const& s1_p : transitions[s][a]) {
+                            expectation += s1_p.second * value[s1_p.first];
+                        }
+                    } else {
+                        // Sum over all ending states
+                        for(Index s1=0; s1<nS; ++s1) {
+                            expectation += dynamic(s, a, s1) * value[s1];
+                        }
                     }
                     // Compare candidate to best so far
                     Real candidate = reward(s, a) + discount*expectation;
@@ -139,7 +147,7 @@ public:
     }
 
     // Helper for converting multidimensional coordinates to a linear vector index
-    Index index_from_coords(std::vector<uint> const& coords, std::vector<uint> const& dims) const {
+    Index index_from_coords(Vector<uint> const& coords, Vector<uint> const& dims) const {
         Index index = 0;
         uint const n = std::min(coords.size(), dims.size());
         for(uint i=0; i<n; ++i) {
@@ -149,8 +157,8 @@ public:
     }
 
     // Helper for converting a linear vector index into multidimensional coordinates
-    std::vector<uint> coords_from_index(Index index, std::vector<uint> const& dims) const {
-        std::vector<uint> coords(dims.size());
+    Vector<uint> coords_from_index(Index index, Vector<uint> const& dims) const {
+        Vector<uint> coords(dims.size());
         for(int i=dims.size()-1; i>=0; --i) {
             coords[i] = index % dims[i];
             index /= dims[i];
