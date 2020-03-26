@@ -27,6 +27,8 @@ public:
         // Assign reward matrix values
         R({{1, 1, 3},
            {0, 0, 2}}) {
+        // Sanity checks
+        verify_dynamic();
     }
 
     Real dynamic(Index s, Index a, Index s1) const {

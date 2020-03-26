@@ -72,6 +72,8 @@ public:
             state_space[i].goo.x = coords[4];
             state_space[i].goo.y = coords[5];
         }
+        // Sanity checks
+        verify_dynamic();
     }
 
     // Returns the probability of transitioning to state s1 given state s and action a

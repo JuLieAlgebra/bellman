@@ -67,6 +67,9 @@ public:
     Index index_from_coords(Vector<uint> const& coords, Vector<uint> const& dims) const;
     // Helper for converting a linear vector index into multidimensional coordinates
     Vector<uint> coords_from_index(Index index, Vector<uint> const& dims) const;
+
+    // Helper function to verify that the implemented 'dynamic' or 'transitions' is a probability distribution
+    void verify_dynamic() const;
 };
 
 ////////////////////////////////////////////////// IMPLEMENTATIONS
@@ -189,6 +192,40 @@ Vector<uint> Bellman::coords_from_index(Index index, Vector<uint> const& dims) c
         index /= dims[i];
     }
     return coords;
+}
+
+/////////////////////////
+
+void Bellman::verify_dynamic() const {
+    // Iterate over all possible starting states
+    for(Index s=0; s<nS; ++s) {
+        // Iterate over all possible actions
+        for(Index a=0; a<nA; ++a) {
+            // Prepare sum of probabilities
+            Real sum = 0.0;
+            // Verify sparse transition matrix if set...
+            if(transitions.size()) {
+                // Sum probabilities for each possible ending state
+                for(std::pair<Index, Real> const& s1_p : transitions.at(s).at(a)) {
+                    sum += s1_p.second;
+                }
+            // ... or verify dynamic function
+            } else {
+                // Sum probabilities for any ending state
+                for(Index s1=0; s1<nS; ++s1) {
+                    sum += dynamic(s, a, s1);
+                }
+            }
+            // Assert that probabilities sum to 1
+            if(fabs(1.0 - sum) > 1e-6) {
+                std::cerr << "================" << std::endl;
+                std::cerr << "Dynamic invalid for state " << s << " and action " << a << ":" << std::endl;
+                std::cerr << "    Got probabilities summing to " << sum << "." << std::endl;
+                std::cerr << "================" << std::endl;
+                throw -1;
+            }
+        }
+    }
 }
 
 //////////////////////////////////////////////////
