@@ -17,13 +17,33 @@ class GridBoi : public Bellman {
     // State space
     struct State {
         struct Coord {
-            uint x;
-            uint y;
+            int x;
+            int y;
             bool operator==(Coord const& other) const {
                 return (x == other.x) and (y == other.y);
             }
             bool operator!=(Coord const& other) const {
                 return (x != other.x) or (y != other.y);
+            }
+            Coord up() const {
+                Coord other(*this);
+                other.y++;
+                return other;
+            }
+            Coord down() const {
+                Coord other(*this);
+                other.y--;
+                return other;
+            }
+            Coord left() const {
+                Coord other(*this);
+                other.x--;
+                return other;
+            }
+            Coord right() const {
+                Coord other(*this);
+                other.x++;
+                return other;
             }
         };
         Coord boi;
@@ -58,33 +78,67 @@ public:
     Real dynamic(Index s_index, Index a, Index s1_index) const {
         State const s = state_space[s_index];
         State const s1 = state_space[s1_index];
+        Real p = 1.0;
         // Evaluate validity of boi move
         if(a == Action::WAIT) {
             // Stand still
             if(s1.boi != s.boi) return 0.0;
-        } else if(a == Action::UP) {
-            // Stand still if top of grid
-            if((s.boi.y == nY-1) and (s1.boi != s.boi)) return 0.0;
-            // Move y+1
-            else if((s1.boi.x != s.boi.x) or (s1.boi.y != s.boi.y+1)) return 0.0;
-        } else if(a == Action::DOWN) {
-            // Stand still if bottom of grid
-            if((s.boi.y == 0) and (s1.boi != s.boi)) return 0.0;
-            // Move y-1
-            else if((s1.boi.x != s.boi.x) or (s1.boi.y != s.boi.y-1)) return 0.0;
-        } else if(a == Action::LEFT) {
-            // Stand still if leftmost of grid
-            if((s.boi.x == 0) and (s1.boi != s.boi)) return 0.0;
-            // Move x-1
-            else if((s1.boi.x != s.boi.x-1) or (s1.boi.y != s.boi.y)) return 0.0;
-        } else if(a == Action::RIGHT) {
-            // Stand still if rightmost of grid
-            if((s.boi.x == nX-1) and (s1.boi != s.boi)) return 0.0;
-            // Move x+1
-            else if((s1.boi.x != s.boi.x+1) or (s1.boi.y != s.boi.y)) return 0.0;
         }
-        // TODO ???
-        Real p = 1.0;
+        else if(a == Action::UP) {
+            // If top of grid
+            if(s.boi.y == nY-1) {
+                // Stand still
+                if(s1.boi != s.boi) return 0.0;
+            }
+            // Move y+1
+            else if(s1.boi != s.boi.up()) return 0.0;
+        }
+        else if(a == Action::DOWN) {
+            // If bottom of grid
+            if(s.boi.y == 0) {
+                // Stand still
+                if(s1.boi != s.boi) return 0.0;
+            }
+            // Move y-1
+            else if(s1.boi != s.boi.down()) return 0.0;
+        }
+        else if(a == Action::LEFT) {
+            // If leftmost of grid
+            if(s.boi.x == 0) {
+                // Stand still
+                if(s1.boi != s.boi) return 0.0;
+            }
+            // Move x-1
+            else if(s1.boi != s.boi.left()) return 0.0;
+        }
+        else if(a == Action::RIGHT) {
+            // If rightmost of grid
+            if(s.boi.x == nX-1) {
+                // Stand still
+                if(s1.boi != s.boi) return 0.0;
+            }
+            // Move x+1
+            else if(s1.boi != s.boi.right()) return 0.0;
+        }
+        // Evaluate possible gob movements
+        if((s1.gob == s.gob) or
+           (s1.gob == s.gob.up()) or
+           (s1.gob == s.gob.down()) or
+           (s1.gob == s.gob.left()) or
+           (s1.gob == s.gob.right())) {
+            p *= (1.0/nA);
+        }
+        else {
+            return 0.0;
+        }
+        // Evaluate possible goo movements
+        if(s.boi == s.goo) {
+            p *= (1.0/(nX*nY));
+        }
+        else {
+            if(s1.goo != s.goo) return 0.0;
+        }
+        // Return compounded probability
         return p;
     }
 

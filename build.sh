@@ -10,7 +10,7 @@ cd $(dirname $0)
 mkdir -p build
 
 # Compilation recipe
-COMPILE_FLAGS="-std=c++11  -O3 -ffast-math  -Wall"
+COMPILE_FLAGS="-std=c++11  -O3 -ffast-math  -Wall -Wno-sign-compare"
 TARGETS="wendyhunt gridboi"
 
 # Run compilations
