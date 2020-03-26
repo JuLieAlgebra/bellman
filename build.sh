@@ -9,5 +9,13 @@ cd $(dirname $0)
 # Make a subdirectory called "build" or just use the existing one
 mkdir -p build
 
-# Compile the "wendyhunt" executable into the "build" directory
-g++ source/wendyhunt.cpp  -o build/wendyhunt  -std=c++11  -O3 -ffast-math  -Wall
+# Compilation recipe
+COMPILE_FLAGS="-std=c++11  -O3 -ffast-math  -Wall"
+TARGETS="wendyhunt gridboi"
+
+# Run compilations
+for TARGET in ${TARGETS}
+do
+    echo "Compiling '${TARGET}'..."
+    g++ source/${TARGET}.cpp  -o build/${TARGET}  ${COMPILE_FLAGS}
+done
