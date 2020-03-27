@@ -122,13 +122,19 @@ public:
             // Move x+1
             else if(s1.boi != s.boi.right()) return 0.0;
         }
-        // Evaluate possible gob movements
+        // Count possible gob movements
+        uint n_gob_moves = 5;
+        if(s.gob.x == 0) n_gob_moves--;
+        else if(s.gob.x == nX-1) n_gob_moves--;
+        if(s.gob.y == 0) n_gob_moves--;
+        else if(s.gob.y == nY-1) n_gob_moves--;
+        // Evaluate gob movement
         if((s1.gob == s.gob) or
            (s1.gob == s.gob.up()) or
            (s1.gob == s.gob.down()) or
            (s1.gob == s.gob.left()) or
            (s1.gob == s.gob.right())) {
-            p *= (1.0/nA);
+            p *= (1.0/n_gob_moves);
         }
         else {
             return 0.0;
