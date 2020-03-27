@@ -56,8 +56,8 @@ public:
     Vector<Index> get_policy() const {return policy;}
 
     // Write the current solution to the given file or terminal
-    void record_solution(std::string const& file) const;
-    void print_solution() const;
+    virtual void record_solution(std::string const& file) const;
+    virtual void print_solution() const;
 
     // Improves the current value function and policy estimate by the given number of
     // fixed-point iterations or until the given convergence tolerance is met

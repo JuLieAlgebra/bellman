@@ -58,7 +58,7 @@ class GridBoi : public Bellman {
 public:
     GridBoi(uint nX=5, uint nY=5) :
         //            nS      nA   g
-        Bellman(pow(nX*nY, 3), 5, 0.9),
+        Bellman(pow(nX*nY, 3), 5, 0.8),
         nX(nX),
         nY(nY),
         state_space(nS) {
@@ -166,8 +166,7 @@ public:
 // Solves the Grid-Boi problem and displays the results
 int main(/*int argc, char** argv*/) {
     GridBoi mdp;
-
-    // mdp.improve(5000, 1e-4);
-    // mdp.print_solution();
+    mdp.improve(500, 1e-2);
+    mdp.record_solution("gridboi.sol");
     return 0;
 }
