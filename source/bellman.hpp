@@ -70,6 +70,9 @@ public:
 
     // Helper function to verify that the implemented 'dynamic' or 'transitions' is a probability distribution
     void verify_dynamic() const;
+
+    // Iterates over all transitions and stores those with nonzero probability in the transitions attribute
+    void analyze_sparsity();
 };
 
 ////////////////////////////////////////////////// IMPLEMENTATIONS
@@ -102,23 +105,23 @@ void Bellman::record_solution(std::string const& file) const {
 
 void Bellman::print_solution() const {
     // Print header
-    std::cout << "================" << std::endl;
-    std::cout << "Bellman Solution" << std::endl;
+    std::cout << "=================" << std::endl;
+    std::cout << "Bellman: Solution" << std::endl;
     std::cout << "s | a | v" << std::endl;
     std::cout << "----------------" << std::endl;
     for(Index s=0; s<nS; ++s) {
         // Print pipe-delimited state-action-value tuples
         std::cout << s << " | " << policy[s] << " | " << value[s] << std::endl;
     }
-    std::cout << "================" << std::endl;
+    std::cout << "=================" << std::endl;
 }
 
 /////////////////////////
 
 void Bellman::improve(uint iterations, Real tolerance) {
     bool converged;
-    std::cout << "================" << std::endl;
-    std::cout << "Bellman improvement beginning..." << std::endl;
+    std::cout << "=================================" << std::endl;
+    std::cout << "Bellman: improvement beginning..." << std::endl;
     for(uint i=1; i<=iterations; ++i) {
         // Alert user of progress
         if(fmod(100.0*i/iterations, 20.0) == 0.0) {
@@ -169,7 +172,7 @@ void Bellman::improve(uint iterations, Real tolerance) {
     if(not converged) {
         std::cout << "... Finished at max iteration " << iterations << "." << std::endl;
     }
-    std::cout << "================" << std::endl;
+    std::cout << "=================================" << std::endl;
 }
 
 /////////////////////////
@@ -197,6 +200,7 @@ Vector<uint> Bellman::coords_from_index(Index index, Vector<uint> const& dims) c
 /////////////////////////
 
 void Bellman::verify_dynamic() const {
+    std::cout << "(Bellman: verifying dynamic)" << std::endl;
     // Iterate over all possible starting states
     for(Index s=0; s<nS; ++s) {
         // Iterate over all possible actions
@@ -223,6 +227,27 @@ void Bellman::verify_dynamic() const {
                 std::cerr << "    Got probabilities summing to " << sum << "." << std::endl;
                 std::cerr << "================" << std::endl;
                 throw -1;
+            }
+        }
+    }
+}
+
+//////////////////////////////////////////////////
+
+void Bellman::analyze_sparsity() {
+    std::cout << "(Bellman: analyzing dynamic sparsity)" << std::endl;
+    // Iterate over all possible starting states
+    for(Index s=0; s<nS; ++s) {
+        transitions.emplace_back();
+        // Iterate over all possible actions
+        for(Index a=0; a<nA; ++a) {
+            transitions[s].emplace_back();
+            // Iterate over all possible ending states
+            for(Index s1=0; s1<nS; ++s1) {
+                Real p = dynamic(s, a, s1);
+                if(p > 0.0) {
+                    transitions[s][a].emplace_back(s1, p);
+                }
             }
         }
     }

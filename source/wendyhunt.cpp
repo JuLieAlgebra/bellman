@@ -31,11 +31,11 @@ public:
         verify_dynamic();
     }
 
-    Real dynamic(Index s, Index a, Index s1) const {
+    Real dynamic(Index s, Index a, Index s1) const override {
         return T[a][s][s1];
     }
 
-    Real reward(Index s, Index a) const {
+    Real reward(Index s, Index a) const override {
         return R[a][s];
     }
 };
