@@ -58,7 +58,7 @@ class GridBoi : public Bellman {
 public:
     GridBoi(uint nX=5, uint nY=5) :
         //            nS      nA   g
-        Bellman(pow(nX*nY, 3), 5, 0.8),
+        Bellman(pow(nX*nY, 3), 5, 0.99),
         nX(nX),
         nY(nY),
         state_space(nS) {
@@ -72,12 +72,13 @@ public:
             state_space[i].goo.x = coords[4];
             state_space[i].goo.y = coords[5];
         }
+        analyze_sparsity();
         // Sanity checks
         verify_dynamic();
     }
 
     // Returns the probability of transitioning to state s1 given state s and action a
-    Real dynamic(Index s_index, Index a, Index s1_index) const {
+    Real dynamic(Index s_index, Index a, Index s1_index) const  override {
         State const s = state_space[s_index];
         State const s1 = state_space[s1_index];
         Real p = 1.0;
@@ -151,13 +152,37 @@ public:
     }
 
     // Returns the (deterministic) reward for selecting action a in state s
-    Real reward(Index s_index, Index a) const {
+    Real reward(Index s_index, Index a) const override {
         State const s = state_space[s_index];
         // Get the goo!
         if(s.boi == s.goo) return 1.0;
         // Avoid the gob!
-        if(s.boi == s.gob) return -1.0;
+        if(s.boi == s.gob) return -5.0;
         return 0.0;
+    }
+
+    // Prettier version of this base method for GridBoi specifically
+    void record_solution(std::string const& file) const override {
+        // Open and clear file
+        std::ofstream stream;
+        stream.open(file);
+        // Write header string as first line
+        stream << "boi_x, boi_y,  gob_x, gob_y,  goo_x, goo_y,  action, value" << std::endl;
+        for(Index s_index=0; s_index<nS; ++s_index) {
+            State const s = state_space[s_index];
+            // Write comma-delimited state-action-value tuples
+            stream << s.boi.x << ", "
+                   << s.boi.y << ",  "
+                   << s.gob.x << ", "
+                   << s.gob.y << ",  "
+                   << s.goo.x << ", "
+                   << s.goo.y << ",  "
+                   << policy[s_index] << ", "
+                   << value[s_index]
+                   << std::endl;
+        }
+        // Close file
+        stream.close();
     }
 };
 
@@ -166,7 +191,7 @@ public:
 // Solves the Grid-Boi problem and displays the results
 int main(/*int argc, char** argv*/) {
     GridBoi mdp;
-    mdp.improve(500, 1e-2);
+    mdp.improve(2000, 1e-4);
     mdp.record_solution("gridboi.sol");
     return 0;
 }
