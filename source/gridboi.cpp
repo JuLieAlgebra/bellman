@@ -166,6 +166,7 @@ public:
         // Open and clear file
         std::ofstream stream;
         stream.open(file);
+        stream << nX << " " << nY << std::endl;
         // Write header string as first line
         stream << "boi_x, boi_y,  gob_x, gob_y,  goo_x, goo_y,  action, value" << std::endl;
         for(Index s_index=0; s_index<nS; ++s_index) {
